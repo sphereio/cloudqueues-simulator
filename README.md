@@ -14,3 +14,7 @@ For activator:
 Then
 
     ~reStart
+
+## Creating a Debian package
+
+    debian:packageBin

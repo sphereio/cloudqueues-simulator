@@ -1,4 +1,8 @@
-name := """cloud-queues-simulation"""
+import java.util.Date
+
+import com.typesafe.sbt.packager.archetypes.ServerLoader
+
+name := """cloud-queues-simulator"""
 
 version := "1.0"
 
@@ -19,3 +23,20 @@ libraryDependencies ++= Seq(
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 spray.revolver.RevolverPlugin.Revolver.settings
+
+enablePlugins(JavaServerAppPackaging)
+
+enablePlugins(DebianPlugin)
+
+version in Debian := new java.text.SimpleDateFormat("yyyyMMddHHmmss").format(new Date)
+
+maintainer := "Sphere Team <support@sphere.io>"
+
+packageSummary := "cloud queues simulator"
+
+packageDescription := """It simulates cloud queues that is based on the openstack zaqar.
+ References:
+ - http://www.rackspace.com/cloud/queues
+ - https://github.com/openstack/zaqar"""
+
+serverLoading in Debian := ServerLoader.SystemV
