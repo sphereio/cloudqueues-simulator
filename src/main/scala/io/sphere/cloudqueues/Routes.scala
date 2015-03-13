@@ -20,7 +20,7 @@ object Routes {
   def index(implicit ec: ExecutionContext): Route =
     get {
       path("") {
-        complete("hello")
+        complete("cloud queues simulator")
       }
     }
 
