@@ -5,21 +5,21 @@ import java.util.UUID
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import io.sphere.cloudqueues.QueueInterface._
 import io.sphere.cloudqueues.QueueManager._
-
+import io.sphere.cloudqueues.reply.Replyable
 
 
 object QueueManager {
 
 
-  case class NewQueue(queue: QueueName)
+  case class NewQueue(queue: QueueName) extends Replyable[QueueCreationResponse]
 
 
-  sealed trait QueueOperation
-  case class PutNewMessage(messages: List[Message]) extends QueueOperation
-  case class ClaimMessages(ttl: Int, limit: Int) extends QueueOperation
-  case class DeleteMessage(id: MessageId, claimId: Option[ClaimId]) extends QueueOperation
+  sealed trait QueueOperation[R] extends Replyable[R]
+  case class PutNewMessage(messages: List[Message]) extends QueueOperation[Option[MessagesAdded]]
+  case class ClaimMessages(ttl: Int, limit: Int) extends QueueOperation[Option[ClaimResponse]]
+  case class DeleteMessage(id: MessageId, claimId: Option[ClaimId]) extends QueueOperation[Option[MessageDeleted]]
 
-  case class AQueueOperation[T <: QueueOperation](queue: QueueName, operation: T)
+  case class AQueueOperation[R](queue: QueueName, operation: QueueOperation[R]) extends Replyable[R]
 
 }
 
@@ -59,10 +59,10 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
   private var claims = new ArrayBuffer[Claim]()
 
   def receive: Receive = {
-    case op: QueueOperation ⇒ handle(op)
+    case op: QueueOperation[_] ⇒ handle(op)
   }
 
-  private def handle(op: QueueOperation) = op match {
+  private def handle(op: QueueOperation[_]) = op match {
 
     case PutNewMessage(messages) ⇒
       log.info(s"putting ${messages.size} messages in '$name'")
