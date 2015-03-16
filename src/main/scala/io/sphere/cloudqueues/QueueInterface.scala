@@ -22,7 +22,7 @@ object QueueInterface {
 
   sealed trait ClaimResponse
   case class ClaimCreated(claim: Claim) extends ClaimResponse
-  case object NoMessagesToClain extends ClaimResponse
+  case object NoMessagesToClaim extends ClaimResponse
 
   case class MessageDeleted(id: MessageId)
 

@@ -81,7 +81,7 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
         sender ! Some(ClaimCreated(claim))
       } else {
         log.info(s"no messages to claim in '$name'")
-        sender ! Some(NoMessagesToClain)
+        sender ! Some(NoMessagesToClaim)
       }
 
 

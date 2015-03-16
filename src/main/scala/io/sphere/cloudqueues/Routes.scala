@@ -81,7 +81,7 @@ object Routes {
           entity(as[ClaimRequestBody]) { claim ⇒
             onSuccess(queueInterface.claimMessages(QueueName(name), claim.ttl, limit)) {
               case None ⇒ complete(HttpResponse(status = NotFound))
-              case Some(NoMessagesToClain) ⇒ complete(HttpResponse(status = NoContent))
+              case Some(NoMessagesToClaim) ⇒ complete(HttpResponse(status = NoContent))
               case Some(ClaimCreated(Claim(id, msgs))) ⇒
                 val ast = JsArray(msgs.map(m ⇒ JsObject(
                   "body" → m.json,
