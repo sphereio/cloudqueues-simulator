@@ -9,6 +9,8 @@ import akka.http.server.Directives._
 import akka.http.server.Route
 import akka.stream.ActorFlowMaterializer
 import io.sphere.cloudqueues.QueueInterface._
+import io.sphere.cloudqueues.crypto.DefaultSigner
+import io.sphere.cloudqueues.oauth.OAuth
 import spray.json.DefaultJsonProtocol._
 import spray.json._
 
@@ -24,18 +26,27 @@ object Routes {
       }
     }
 
-  def auth(implicit ec: ExecutionContext): Route =
-    path("v2.0" / "tokens") {
-      post {
-        val ast =
-          JsObject("access" →
-            JsObject("token" →
-              JsObject(
-                "id" → JsString("simulated-token"),
-                "expires" → JsString("2212-04-13T22:51:02.000-06:00"))))
-        complete(ast)
+  case class Auth(secretKey: Array[Byte])(implicit ec: ExecutionContext) {
+
+    implicit val signer = DefaultSigner
+
+    val route =
+      path("v2.0" / "tokens") {
+        post {
+          val validUntil = OAuth.defaultValidityDate
+          val validUntilString = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(validUntil)
+          val token = OAuth.createOAuthToken(secretKey = secretKey, validUntil = validUntil)
+          val ast =
+            JsObject("access" →
+              JsObject("token" →
+                JsObject(
+                  "id" → JsString(token.token),
+                  "expires" → JsString(validUntilString))))
+          complete(ast)
+        }
       }
-    }
+
+  }
 
   case class ClaimRequestBody(ttl: Int, grace: Int)
   object ClaimRequestBody {

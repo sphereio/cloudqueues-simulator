@@ -20,7 +20,9 @@ libraryDependencies ++= Seq(
 )
 
 // Change this to another test framework if you prefer
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "2.2.4",
+  "org.scalacheck" %% "scalacheck" % "1.12.2") map (_ % Test)
 
 spray.revolver.RevolverPlugin.Revolver.settings
 
