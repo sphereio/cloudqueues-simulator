@@ -95,6 +95,15 @@ object Routes {
       }
     }
 
+    val releaseClaim = delete {
+      path(Segment / "claims" / Segment) { (queueName, claimId) ⇒
+        onSuccess(queueInterface.releaseClaim(QueueName(queueName), ClaimId(claimId))) {
+          case None ⇒ complete(HttpResponse(status = NotFound))
+          case Some(ClaimReleased) ⇒ complete(HttpResponse(status = NoContent))
+        }
+      }
+    }
+
     val deleteMessages = delete {
       path(Segment / "messages" / Segment) { (name, msgId) ⇒
         parameter('claim_id.as[String] ?) { claimId ⇒
@@ -107,7 +116,7 @@ object Routes {
     }
 
     val route: Route = pathPrefix("v1" / "queues") {
-      newQueue ~ postMessages ~ claimMessages ~ deleteMessages
+      newQueue ~ postMessages ~ claimMessages ~ releaseClaim ~ deleteMessages
     }
   }
 

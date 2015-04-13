@@ -2,7 +2,6 @@ package io.sphere.cloudqueues
 
 import akka.actor.ActorRef
 import akka.util.Timeout
-import io.sphere.cloudqueues.QueueInterface.{ClaimResponse, MessagesAdded, QueueCreationResponse}
 import io.sphere.cloudqueues.QueueManager._
 import io.sphere.cloudqueues.reply._
 
@@ -26,9 +25,13 @@ object QueueInterface {
 
   case class MessageDeleted(id: MessageId)
 
+  case object ClaimReleased
+
 }
 
 class QueueInterface(queueManager: ActorRef) {
+
+  import io.sphere.cloudqueues.QueueInterface._
 
   implicit val timeout: Timeout = 50.milliseconds
 
@@ -40,6 +43,9 @@ class QueueInterface(queueManager: ActorRef) {
 
   def claimMessages(queue: QueueName, ttl: Int, limit: Int): Future[Option[ClaimResponse]] =
     ask(queue, ClaimMessages(ttl, limit))
+
+  def releaseClaim(queue: QueueName, claimId: ClaimId): Future[Option[ClaimReleased.type]] =
+    ask(queue, ReleaseClaim(claimId))
 
   def deleteMessages(queue: QueueName, messageId: MessageId, claimId: Option[ClaimId]): Future[Any] =
     ask(queue, DeleteMessage(messageId, claimId))

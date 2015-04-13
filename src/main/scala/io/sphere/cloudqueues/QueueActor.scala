@@ -18,6 +18,7 @@ object QueueManager {
   case class PutNewMessage(messages: List[Message]) extends QueueOperation[Option[MessagesAdded]]
   case class ClaimMessages(ttl: Int, limit: Int) extends QueueOperation[Option[ClaimResponse]]
   case class DeleteMessage(id: MessageId, claimId: Option[ClaimId]) extends QueueOperation[Option[MessageDeleted]]
+  case class ReleaseClaim(claimId: ClaimId) extends QueueOperation[Option[ClaimReleased.type]]
 
   case class AQueueOperation[R](queue: QueueName, operation: QueueOperation[R]) extends Replyable[R]
 
@@ -84,6 +85,16 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
         sender ! Some(NoMessagesToClaim)
       }
 
+
+    case ReleaseClaim(claimId) ⇒
+      val maybeClaim = claims.find(_.id == claimId)
+      val result = maybeClaim map { claim ⇒
+        log.info(s"release ${claim.messages.size} messages from '$name' with claim id '${claim.id}'")
+        queuedMessages.pushAll(claim.messages)
+        claims = claims.filterNot(_.id == claimId)
+        ClaimReleased
+      }
+      sender ! result
 
 
     case DeleteMessage(msgId, None) ⇒
