@@ -4,13 +4,10 @@ import java.util.{Calendar, Date}
 
 import io.sphere.cloudqueues.crypto.Signer
 
-/**
- * Creation of an OAuth token
- * 1. creates an authentication token with some information
- * 2. serialize these information
- * 3. sign this serialized ticket to avoid alteration
- * 4. serialize the ticket and the signature to create the OAuth token
- */
+import scala.util.control.NonFatal
+import scala.util.{Success, Failure, Try}
+
+
 object OAuth {
 
   case class AuthenticationToken(validUntil: Date)
@@ -23,23 +20,40 @@ object OAuth {
    */
   case class OAuthToken(token: String)
 
+  sealed trait OAuthTokenParsing
+  case class OAuthValid(token: AuthenticationToken) extends OAuthTokenParsing
+  case class ParsingError(e: Throwable) extends OAuthTokenParsing
+  case object SignatureCorrupted extends OAuthTokenParsing
+  case object PeriodInvalid extends OAuthTokenParsing
+}
+
+
+/**
+ * Creation of an OAuth token
+ * 1. creates an authentication token with some information
+ * 2. serialize these information
+ * 3. sign this serialized ticket to avoid alteration
+ * 4. serialize the ticket and the signature to create the OAuth token
+ */
+class OAuth(secretKey: Array[Byte], signer: Signer) {
+  import OAuth._
+
   //
   // Creation
   //
 
   def defaultValidityDate: Date = {
     val calendar = Calendar.getInstance()
-    calendar.add(Calendar.HOUR_OF_DAY, 24)
+    calendar.add(Calendar.DAY_OF_YEAR, 1)
     calendar.getTime
   }
 
-  def createOAuthToken(secretKey: Array[Byte], validUntil: Date = defaultValidityDate)(implicit signer: Signer): OAuthToken =
+  def createOAuthToken(validUntil: Date = defaultValidityDate): OAuthToken =
     serialize(
       sign(
         serializeToken(
           AuthenticationToken(
-            validUntil = validUntil)),
-        secretKey))
+            validUntil = validUntil))))
 
 
   private def serializeToken(token: AuthenticationToken): SerializedToken = {
@@ -51,7 +65,7 @@ object OAuth {
     SerializedToken(json.compactPrint)
   }
 
-  private def sign(token: SerializedToken, secretKey: Array[Byte])(implicit signer: Signer): SignedSerializedToken = {
+  private def sign(token: SerializedToken): SignedSerializedToken = {
     val signature = signer.sign(message = token.raw, key = secretKey)
     SignedSerializedToken(token, signature = signature)
   }
@@ -71,30 +85,29 @@ object OAuth {
   // parsing
   //
 
-  sealed trait OAuthTokenParsing
-  case class OAuthValid(token: AuthenticationToken) extends OAuthTokenParsing
-  case object SignatureCorrupted extends OAuthTokenParsing
-  case object PeriodInvalid extends OAuthTokenParsing
-
-  def validates(token: OAuthToken, secretKey: Array[Byte], now: Date = new Date())(implicit signer: Signer): OAuthTokenParsing = {
-    val serializedToken = deserialize(token)
-    if (!isSignatureValid(serializedToken, secretKey)) {
-      SignatureCorrupted
-    } else {
-      checkValidityPeriod(deserializeToken(serializedToken.token), now = now)
+  def validates(token: OAuthToken, now: Date = new Date()): OAuthTokenParsing = {
+    deserialize(token) match {
+      case Failure(NonFatal(e)) ⇒ ParsingError(e)
+      case Success(serializedToken) ⇒
+        if (!isSignatureValid(serializedToken)) {
+          SignatureCorrupted
+        } else {
+          checkValidityPeriod(deserializeToken(serializedToken.token), now = now)
+        }
     }
   }
 
 
-  private def deserialize(token: OAuthToken): SignedSerializedToken = {
-    import JsonFormats._
-    import spray.json._
+  private def deserialize(token: OAuthToken): Try[SignedSerializedToken] =
+    Try {
+      import JsonFormats._
+      import spray.json._
 
-    val ast = token.token.parseJson
-    ast.convertTo[SignedSerializedToken]
-  }
+      val ast = token.token.parseJson
+      ast.convertTo[SignedSerializedToken]
+    }
 
-  private def isSignatureValid(token: SignedSerializedToken, secretKey: Array[Byte])(implicit signer: Signer): Boolean =
+  private def isSignatureValid(token: SignedSerializedToken): Boolean =
     signer.validateSignature(message = token.token.raw, signature = token.signature, key = secretKey)
 
   private def deserializeToken(token: SerializedToken): AuthenticationToken = {

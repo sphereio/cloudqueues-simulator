@@ -6,11 +6,11 @@ import akka.http.model.StatusCodes._
 import akka.http.model.headers.Location
 import akka.http.model.{HttpEntity, HttpResponse}
 import akka.http.server.Directives._
-import akka.http.server.Route
+import akka.http.server.{RequestContext, Route}
 import akka.stream.ActorFlowMaterializer
 import io.sphere.cloudqueues.QueueInterface._
-import io.sphere.cloudqueues.crypto.DefaultSigner
 import io.sphere.cloudqueues.oauth.OAuth
+import io.sphere.cloudqueues.oauth.OAuth._
 import spray.json.DefaultJsonProtocol._
 import spray.json._
 
@@ -26,16 +26,14 @@ object Routes {
       }
     }
 
-  case class Auth(secretKey: Array[Byte])(implicit ec: ExecutionContext) {
-
-    implicit val signer = DefaultSigner
+  case class Auth(oauth: OAuth)(implicit ec: ExecutionContext) {
 
     val route =
       path("v2.0" / "tokens") {
         post {
-          val validUntil = OAuth.defaultValidityDate
+          val validUntil = oauth.defaultValidityDate
           val validUntilString = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(validUntil)
-          val token = OAuth.createOAuthToken(secretKey = secretKey, validUntil = validUntil)
+          val token = oauth.createOAuthToken(validUntil = validUntil)
           val ast =
             JsObject("access" →
               JsObject("token" →
@@ -53,7 +51,7 @@ object Routes {
     implicit val format = jsonFormat2(ClaimRequestBody.apply)
   }
 
-  case class Queue(queueInterface: QueueInterface)(implicit ec: ExecutionContext, materializer: ActorFlowMaterializer) {
+  case class Queue(queueInterface: QueueInterface, oauth: OAuth)(implicit ec: ExecutionContext, materializer: ActorFlowMaterializer) {
 
     implicit val messageJson = jsonFormat2(Message.apply)
 
@@ -117,8 +115,19 @@ object Routes {
       }
     }
 
+    val authenticated: RequestContext ⇒ Boolean = req ⇒ {
+      req.request.getHeader("X-Auth-Token").fold(false) { token ⇒
+        oauth.validates(OAuthToken(token.value())) match {
+          case OAuthValid(_) ⇒ true
+          case _ ⇒ false
+        }
+      }
+    }
+
     val route: Route = pathPrefix("v1" / "queues") {
-      newQueue ~ postMessages ~ claimMessages ~ deleteMessages
+      authorize(authenticated) {
+        newQueue ~ postMessages ~ claimMessages ~ deleteMessages
+      }
     }
   }
 

@@ -9,8 +9,7 @@ import org.scalatest.{FreeSpec, Matchers}
 
 class OAuthTest extends FreeSpec with Matchers with GeneratorDrivenPropertyChecks {
 
-  private val validKey = "secret".getBytes
-  private implicit val validSigner = DefaultSigner
+  private val validSigner = DefaultSigner
 
   private def dateInMoreThan24Hours: Date = {
     val calendar = Calendar.getInstance()
@@ -19,7 +18,9 @@ class OAuthTest extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
     calendar.getTime
   }
 
-  private def validToken = OAuth.createOAuthToken(validKey)
+  private val oauth = new OAuth("secret".getBytes, validSigner)
+
+  private def validToken = oauth.createOAuthToken()
 
 
   "an OAuth token" - {
@@ -28,7 +29,7 @@ class OAuthTest extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
     }
 
     "can be validated" in {
-      val validation = OAuth.validates(validToken, validKey)
+      val validation = oauth.validates(validToken)
       validation shouldBe a [OAuthValid]
     }
 
@@ -37,8 +38,7 @@ class OAuthTest extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
       "the validity period is outdated" in {
         forAll { (d: Date) ⇒
           whenever(d.after(dateInMoreThan24Hours)) {
-            val token = OAuth.createOAuthToken(validKey)
-            val validation = OAuth.validates(validToken, validKey, now = d)
+            val validation = oauth.validates(validToken, now = d)
             validation shouldBe a [PeriodInvalid.type]
           }
         }
@@ -52,13 +52,18 @@ class OAuthTest extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
         val newJson = json.copy(fields = json.fields + ("signature" → JsString("new_signature")))
         val newToken = OAuthToken(newJson.compactPrint)
 
-        val validation = OAuth.validates(newToken, validKey)
+        val validation = oauth.validates(newToken)
         validation shouldBe a [SignatureCorrupted.type]
       }
 
       "the secret key is different" in {
-        val validation = OAuth.validates(validToken, "newSecret".getBytes)
+        val validation = new OAuth("newSecret".getBytes, validSigner).validates(validToken)
         validation shouldBe a [SignatureCorrupted.type]
+      }
+
+      "the token cannot be parsed" in {
+        val validation = oauth.validates(OAuthToken("hello"))
+        validation shouldBe a [ParsingError]
       }
     }
   }
