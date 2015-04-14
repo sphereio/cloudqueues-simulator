@@ -5,6 +5,8 @@ import akka.http.server.Directives._
 import akka.stream.ActorFlowMaterializer
 import com.github.kxbmap.configs._
 import com.typesafe.config.ConfigFactory
+import io.sphere.cloudqueues.crypto.DefaultSigner
+import io.sphere.cloudqueues.oauth.OAuth
 
 object Main extends App with Logging {
 
@@ -14,12 +16,16 @@ object Main extends App with Logging {
   implicit val materializer = ActorFlowMaterializer()
 
   val httpPort = conf.get[Int]("http.port")
+  val secretKey = conf.get[String]("secret").getBytes("UTF-8")
 
   val queueManager = system.actorOf(Props[QueueManager])
   val queueInterface = new QueueInterface(queueManager)
-  val queue = Routes.Queue(queueInterface)
 
-  val routes = Routes.index ~ Routes.auth ~ queue.route
+  val oauth = new OAuth(secretKey, DefaultSigner)
+  val auth = Routes.Auth(oauth)
+  val queue = Routes.Queue(queueInterface, oauth)
+
+  val routes = Routes.index ~ auth.route ~ queue.route
   val startedServer = StartedServer("0.0.0.0", httpPort, routes)
 
 
