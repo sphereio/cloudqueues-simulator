@@ -20,8 +20,8 @@ import scala.concurrent.ExecutionContext
 object Routes {
 
   def index(implicit ec: ExecutionContext): Route =
-    get {
-      path("") {
+    path("") {
+      get {
         complete("cloud queues simulator")
       }
     }
@@ -55,74 +55,79 @@ object Routes {
 
     implicit val messageJson = jsonFormat2(Message.apply)
 
-    val newQueue = put {
+    val newQueue =
       path(Segment) { name ⇒
-        onSuccess(queueInterface.newQueue(QueueName(name))) { resp ⇒
-          val status = resp match {
-            case QueueAlreadyExists ⇒ NoContent
-            case QueueCreated ⇒ Created
+        put {
+          onSuccess(queueInterface.newQueue(QueueName(name))) { resp ⇒
+            val status = resp match {
+              case QueueAlreadyExists ⇒ NoContent
+              case QueueCreated ⇒ Created
+            }
+            complete(HttpResponse(status = status).withHeaders(Location(s"/v1/queues/$name")))
           }
-          complete(HttpResponse(status = status).withHeaders(Location(s"/v1/queues/$name")))
         }
       }
-    }
 
-    val postMessages = post {
+    val postMessages =
       path(Segment / "messages") { name ⇒
-        entity(as[List[Message]]) { messages =>
-          onSuccess(queueInterface.addMessages(QueueName(name), messages)) {
-            case None ⇒ complete(HttpResponse(status = NotFound))
-            case Some(MessagesAdded(msg)) ⇒
-              val response = JsObject(
-                "partial" → JsBoolean(false),
-                "resources" → JsArray(msg.map(m ⇒ JsString(s"/v1/queues/$name/messages/${m.id}")): _*)
-              )
-              complete(Created → response)
-          }
-        }
-      }
-    }
-
-    val claimMessages = post {
-      path(Segment / "claims") { name ⇒
-        parameter('limit.as[Int] ?) { maybeLimit ⇒
-          val limit = maybeLimit getOrElse 10
-          entity(as[ClaimRequestBody]) { claim ⇒
-            onSuccess(queueInterface.claimMessages(QueueName(name), claim.ttl, limit)) {
+        post {
+          entity(as[List[Message]]) { messages =>
+            onSuccess(queueInterface.addMessages(QueueName(name), messages)) {
               case None ⇒ complete(HttpResponse(status = NotFound))
-              case Some(NoMessagesToClaim) ⇒ complete(HttpResponse(status = NoContent))
-              case Some(ClaimCreated(Claim(id, msgs))) ⇒
-                val ast = JsArray(msgs.map(m ⇒ JsObject(
-                  "body" → m.json,
-                  "age" → JsNumber(239),
-                  "href" → JsString(s"/v1/queues/$name/messages/${m.id}?claim_id=$id"),
-                  "ttl" → JsNumber(claim.ttl))): _*)
-                complete(Created → ast)
+              case Some(MessagesAdded(msg)) ⇒
+                val response = JsObject(
+                  "partial" → JsBoolean(false),
+                  "resources" → JsArray(msg.map(m ⇒ JsString(s"/v1/queues/$name/messages/${m.id}")): _*)
+                )
+                complete(Created → response)
             }
           }
         }
       }
-    }
 
-    val releaseClaim = delete {
-      path(Segment / "claims" / Segment) { (queueName, claimId) ⇒
-        onSuccess(queueInterface.releaseClaim(QueueName(queueName), ClaimId(claimId))) {
-          case None ⇒ complete(HttpResponse(status = NotFound))
-          case Some(ClaimReleased) ⇒ complete(HttpResponse(status = NoContent))
-        }
-      }
-    }
-
-    val deleteMessages = delete {
-      path(Segment / "messages" / Segment) { (name, msgId) ⇒
-        parameter('claim_id.as[String] ?) { claimId ⇒
-          // TODO (YaSi): parse claimId directly with type ClaimId
-          onSuccess(queueInterface.deleteMessages(QueueName(name), MessageId(msgId), claimId.map(ClaimId.apply))) { _ ⇒
-            complete(HttpResponse(status = NoContent, entity = HttpEntity.empty(`application/json`)))
+    val claimMessages =
+      path(Segment / "claims") { name ⇒
+        post {
+          parameter('limit.as[Int] ?) { maybeLimit ⇒
+            val limit = maybeLimit getOrElse 10
+            entity(as[ClaimRequestBody]) { claim ⇒
+              onSuccess(queueInterface.claimMessages(QueueName(name), claim.ttl, limit)) {
+                case None ⇒ complete(HttpResponse(status = NotFound))
+                case Some(NoMessagesToClaim) ⇒ complete(HttpResponse(status = NoContent))
+                case Some(ClaimCreated(Claim(id, msgs))) ⇒
+                  val ast = JsArray(msgs.map(m ⇒ JsObject(
+                    "body" → m.json,
+                    "age" → JsNumber(239),
+                    "href" → JsString(s"/v1/queues/$name/messages/${m.id}?claim_id=$id"),
+                    "ttl" → JsNumber(claim.ttl))): _*)
+                  complete(Created → ast)
+              }
+            }
           }
         }
       }
-    }
+
+    val releaseClaim =
+      path(Segment / "claims" / Segment) { (queueName, claimId) ⇒
+        delete {
+          onSuccess(queueInterface.releaseClaim(QueueName(queueName), ClaimId(claimId))) {
+            case None ⇒ complete(HttpResponse(status = NotFound))
+            case Some(ClaimReleased) ⇒ complete(HttpResponse(status = NoContent))
+          }
+        }
+      }
+
+    val deleteMessages =
+      path(Segment / "messages" / Segment) { (name, msgId) ⇒
+        delete {
+          parameter('claim_id.as[String] ?) { claimId ⇒
+            // TODO (YaSi): parse claimId directly with type ClaimId
+            onSuccess(queueInterface.deleteMessages(QueueName(name), MessageId(msgId), claimId.map(ClaimId.apply))) { _ ⇒
+              complete(HttpResponse(status = NoContent, entity = HttpEntity.empty(`application/json`)))
+            }
+          }
+        }
+      }
 
     val authenticated: RequestContext ⇒ Boolean = req ⇒ {
       req.request.getHeader("X-Auth-Token").fold(false) { token ⇒
