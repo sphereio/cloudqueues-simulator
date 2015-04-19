@@ -2,23 +2,32 @@ package io.sphere.cloudqueues
 
 import java.util.UUID
 
+import akka.http.server.PathMatchers.Segment
 import spray.json.JsValue
 
 
 //
 // model
 //
-
 case class QueueName(name: String) extends AnyVal {
   override def toString: String = name
 }
+object QueueName {
+  val segment = Segment map apply
+}
+
 case class MessageId(id: String) extends AnyVal {
   override def toString: String = id
 }
+object MessageId {
+  val segment = Segment map apply
+}
+
 case class ClaimId(id: String) extends AnyVal {
   override def toString: String = id
 }
 object ClaimId {
+  val segment = Segment map apply
   // ClaimId can be directly read as query parameter
   implicit val claimUnmarshaller = akka.http.unmarshalling.Unmarshaller.strict[String, ClaimId](ClaimId.apply)
 }

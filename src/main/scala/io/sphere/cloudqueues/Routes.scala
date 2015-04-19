@@ -56,28 +56,28 @@ object Routes {
     implicit val messageJson = jsonFormat2(Message.apply)
 
     val newQueue =
-      path(Segment) { name ⇒
+      path(QueueName.segment) { queue ⇒
         put {
-          onSuccess(queueInterface.newQueue(QueueName(name))) { resp ⇒
+          onSuccess(queueInterface.newQueue(queue)) { resp ⇒
             val status = resp match {
               case QueueAlreadyExists ⇒ NoContent
               case QueueCreated ⇒ Created
             }
-            complete(HttpResponse(status = status).withHeaders(Location(s"/v1/queues/$name")))
+            complete(HttpResponse(status = status).withHeaders(Location(s"/v1/queues/$queue")))
           }
         }
       }
 
     val postMessages =
-      path(Segment / "messages") { name ⇒
+      path(QueueName.segment / "messages") { queue ⇒
         post {
           entity(as[List[Message]]) { messages =>
-            onSuccess(queueInterface.addMessages(QueueName(name), messages)) {
+            onSuccess(queueInterface.addMessages(queue, messages)) {
               case None ⇒ complete(HttpResponse(status = NotFound))
               case Some(MessagesAdded(msg)) ⇒
                 val response = JsObject(
                   "partial" → JsBoolean(false),
-                  "resources" → JsArray(msg.map(m ⇒ JsString(s"/v1/queues/$name/messages/${m.id}")): _*)
+                  "resources" → JsArray(msg.map(m ⇒ JsString(s"/v1/queues/$queue/messages/${m.id}")): _*)
                 )
                 complete(Created → response)
             }
@@ -86,19 +86,19 @@ object Routes {
       }
 
     val claimMessages =
-      path(Segment / "claims") { name ⇒
+      path(QueueName.segment / "claims") { queue ⇒
         post {
           parameter('limit.as[Int] ?) { maybeLimit ⇒
             val limit = maybeLimit getOrElse 10
             entity(as[ClaimRequestBody]) { claim ⇒
-              onSuccess(queueInterface.claimMessages(QueueName(name), claim.ttl, limit)) {
+              onSuccess(queueInterface.claimMessages(queue, claim.ttl, limit)) {
                 case None ⇒ complete(HttpResponse(status = NotFound))
                 case Some(NoMessagesToClaim) ⇒ complete(HttpResponse(status = NoContent))
                 case Some(ClaimCreated(Claim(id, msgs))) ⇒
                   val ast = JsArray(msgs.map(m ⇒ JsObject(
                     "body" → m.json,
                     "age" → JsNumber(239),
-                    "href" → JsString(s"/v1/queues/$name/messages/${m.id}?claim_id=$id"),
+                    "href" → JsString(s"/v1/queues/$queue/messages/${m.id}?claim_id=$id"),
                     "ttl" → JsNumber(claim.ttl))): _*)
                   complete(Created → ast)
               }
@@ -108,9 +108,9 @@ object Routes {
       }
 
     val releaseClaim =
-      path(Segment / "claims" / Segment) { (queueName, claimId) ⇒
+      path(QueueName.segment / "claims" / ClaimId.segment) { (queue, claimId) ⇒
         delete {
-          onSuccess(queueInterface.releaseClaim(QueueName(queueName), ClaimId(claimId))) {
+          onSuccess(queueInterface.releaseClaim(queue, claimId)) {
             case None ⇒ complete(HttpResponse(status = NotFound))
             case Some(ClaimReleased) ⇒ complete(HttpResponse(status = NoContent))
           }
@@ -118,10 +118,10 @@ object Routes {
       }
 
     val deleteMessages =
-      path(Segment / "messages" / Segment) { (name, msgId) ⇒
+      path(QueueName.segment / "messages" / MessageId.segment) { (queue, msgId) ⇒
         delete {
           parameter('claim_id.as[ClaimId] ?) { claimId ⇒
-            onSuccess(queueInterface.deleteMessages(QueueName(name), MessageId(msgId), claimId)) { _ ⇒
+            onSuccess(queueInterface.deleteMessages(queue, msgId, claimId)) { _ ⇒
               complete(HttpResponse(status = NoContent, entity = HttpEntity.empty(`application/json`)))
             }
           }
