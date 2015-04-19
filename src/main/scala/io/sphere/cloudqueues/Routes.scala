@@ -120,9 +120,8 @@ object Routes {
     val deleteMessages =
       path(Segment / "messages" / Segment) { (name, msgId) ⇒
         delete {
-          parameter('claim_id.as[String] ?) { claimId ⇒
-            // TODO (YaSi): parse claimId directly with type ClaimId
-            onSuccess(queueInterface.deleteMessages(QueueName(name), MessageId(msgId), claimId.map(ClaimId.apply))) { _ ⇒
+          parameter('claim_id.as[ClaimId] ?) { claimId ⇒
+            onSuccess(queueInterface.deleteMessages(QueueName(name), MessageId(msgId), claimId)) { _ ⇒
               complete(HttpResponse(status = NoContent, entity = HttpEntity.empty(`application/json`)))
             }
           }

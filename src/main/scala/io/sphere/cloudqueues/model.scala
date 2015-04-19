@@ -18,6 +18,10 @@ case class MessageId(id: String) extends AnyVal {
 case class ClaimId(id: String) extends AnyVal {
   override def toString: String = id
 }
+object ClaimId {
+  // ClaimId can be directly read as query parameter
+  implicit val claimUnmarshaller = akka.http.unmarshalling.Unmarshaller.strict[String, ClaimId](ClaimId.apply)
+}
 
 case class Message(ttl: Int, body: JsValue)
 case class MessageInQueue(id: MessageId, ttl: Int, json: JsValue)
