@@ -54,11 +54,11 @@ class QueueTest extends FreeSpec with Matchers with MockitoSugar with OptionValu
   }
 
   "creating a queue" - {
-    "be rejected without a valid OAuth token" in withActorSystem(new QueueSetup(_) {
-      Put("/v1/queues/test").withHeaders(`X-Auth-Token`("hello")) ~> route ~> check {
-        rejection shouldEqual AuthorizationFailedRejection
-      }
-    })
+//    "be rejected without a valid OAuth token" in withActorSystem(new QueueSetup(_) {
+//      Put("/v1/queues/test").withHeaders(`X-Auth-Token`("hello")) ~> route ~> check {
+//        rejection shouldEqual AuthorizationFailedRejection
+//      }
+//    })
 
     "is only possible with a OAuth token" in withActorSystem(new QueueSetup(_) {
       Put("/v1/queues/test") ~> authenticated ~> route ~> check {
