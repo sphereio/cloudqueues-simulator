@@ -138,9 +138,7 @@ object Routes {
     }
 
     val route: Route = pathPrefix("v1" / "queues") {
-      authorize(authenticated) {
-        newQueue ~ postMessages ~ claimMessages ~ releaseClaim ~ deleteMessages
-      }
+      newQueue ~ postMessages ~ claimMessages ~ releaseClaim ~ deleteMessages
     }
   }
 
