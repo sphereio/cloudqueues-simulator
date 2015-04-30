@@ -39,17 +39,17 @@ spray.revolver.RevolverPlugin.Revolver.settings
 
 enablePlugins(JavaServerAppPackaging)
 
+enablePlugins(DockerPlugin)
+dockerExposedPorts := 30001 :: Nil
+packageName in Docker := "sphereio/cloud-queues-simulator"
+dockerUpdateLatest := true
+
 enablePlugins(DebianPlugin)
-
 version in Debian := new java.text.SimpleDateFormat("yyyyMMddHHmmss").format(new Date)
-
 maintainer := "Sphere Team <support@sphere.io>"
-
 packageSummary := "cloud queues simulator"
-
 packageDescription := """It simulates cloud queues that is based on the openstack zaqar.
  References:
  - http://www.rackspace.com/cloud/queues
  - https://github.com/openstack/zaqar"""
-
 serverLoading in Debian := ServerLoader.SystemV

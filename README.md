@@ -18,3 +18,15 @@ Then
 ## Creating a Debian package
 
     debian:packageBin
+
+## Creating a local docker container
+
+    docker:publishLocal
+
+And run it:
+
+    docker run -p 30001:30001 cloud-queues-simulator:<version>
+
+## Run the latest version of the docker container
+
+    docker run --rm -p 30001:30001 sphereio/cloud-queues-simulator
