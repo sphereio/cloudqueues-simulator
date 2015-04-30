@@ -1,8 +1,8 @@
 package io.sphere.cloudqueues
 
 import akka.actor.ActorSystem
-import akka.http.Http
-import akka.http.server._
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.server._
 import akka.stream.ActorFlowMaterializer
 import akka.stream.scaladsl.Sink
 

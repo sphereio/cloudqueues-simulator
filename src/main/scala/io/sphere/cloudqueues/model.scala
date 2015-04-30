@@ -2,7 +2,8 @@ package io.sphere.cloudqueues
 
 import java.util.UUID
 
-import akka.http.server.PathMatchers.Segment
+import akka.http.scaladsl.unmarshalling.Unmarshaller
+import akka.http.scaladsl.server.PathMatchers.Segment
 import spray.json.JsValue
 
 
@@ -29,7 +30,7 @@ case class ClaimId(id: String) extends AnyVal {
 object ClaimId {
   val segment = Segment map apply
   // ClaimId can be directly read as query parameter
-  implicit val claimUnmarshaller = akka.http.unmarshalling.Unmarshaller.strict[String, ClaimId](ClaimId.apply)
+  implicit val claimUnmarshaller = Unmarshaller.strict[String, ClaimId](ClaimId.apply)
 }
 
 case class Message(ttl: Int, body: JsValue)

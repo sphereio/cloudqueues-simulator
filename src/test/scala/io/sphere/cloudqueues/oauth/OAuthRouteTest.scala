@@ -1,10 +1,10 @@
 package io.sphere.cloudqueues.oauth
 
 import akka.actor.ActorSystem
-import akka.http.model.HttpEntity
-import akka.http.model.MediaTypes._
-import akka.http.model.StatusCodes._
-import akka.http.testkit.ScalatestRouteTest
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.MediaTypes._
+import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.testkit.ScalatestRouteTest
 import io.sphere.cloudqueues.Routes
 import io.sphere.cloudqueues.crypto.DefaultSigner
 import org.scalatest.mock.MockitoSugar

@@ -3,12 +3,12 @@ package io.sphere.cloudqueues
 import java.util.UUID
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.model.MediaTypes._
-import akka.http.model.StatusCodes._
-import akka.http.model.headers.CustomHeader
-import akka.http.model.{HttpEntity, HttpHeader, HttpRequest}
-import akka.http.server.AuthorizationFailedRejection
-import akka.http.testkit.ScalatestRouteTest
+import akka.http.scaladsl.model.MediaTypes._
+import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.headers.CustomHeader
+import akka.http.scaladsl.model.{HttpEntity, HttpHeader, HttpRequest}
+import akka.http.scaladsl.server.AuthorizationFailedRejection
+import akka.http.scaladsl.testkit.ScalatestRouteTest
 import io.sphere.cloudqueues.crypto.DefaultSigner
 import io.sphere.cloudqueues.oauth.OAuth
 import io.sphere.cloudqueues.oauth.OAuth.OAuthToken

@@ -1,12 +1,12 @@
 package io.sphere.cloudqueues
 
-import akka.http.marshallers.sprayjson.SprayJsonSupport._
-import akka.http.model.ContentTypes._
-import akka.http.model.StatusCodes._
-import akka.http.model.headers.Location
-import akka.http.model.{HttpEntity, HttpResponse}
-import akka.http.server.Directives._
-import akka.http.server.{RequestContext, Route}
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.model.ContentTypes._
+import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.headers.Location
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{RequestContext, Route}
 import akka.stream.ActorFlowMaterializer
 import io.sphere.cloudqueues.QueueInterface._
 import io.sphere.cloudqueues.oauth.OAuth

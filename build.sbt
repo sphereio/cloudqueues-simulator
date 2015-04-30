@@ -8,10 +8,10 @@ version := "1.0"
 
 scalaVersion := "2.11.6"
 
-val akkaHttpVersion = "1.0-M5"
+val akkaHttpVersion = "1.0-RC1"
 
 libraryDependencies ++=
-  "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpVersion ::
+  "com.typesafe.akka" %% "akka-http-scala-experimental" % akkaHttpVersion ::
   "com.typesafe.akka" %% "akka-slf4j" % "2.3.9" ::
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpVersion ::
   "com.typesafe" % "config" % "1.2.1" ::
@@ -23,7 +23,7 @@ libraryDependencies ++=
 libraryDependencies ++=
   "org.scalatest" %% "scalatest" % "2.2.4" ::
   "org.scalacheck" %% "scalacheck" % "1.12.2" ::
-  "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion ::
+  "com.typesafe.akka" %% "akka-http-testkit-scala-experimental" % akkaHttpVersion ::
   "org.mockito" % "mockito-core" % "1.10.19" ::
   Nil map (_ % Test)
 

@@ -1,7 +1,7 @@
 package io.sphere.cloudqueues
 
 import akka.actor.{Props, ActorSystem}
-import akka.http.server.Directives._
+import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorFlowMaterializer
 import com.github.kxbmap.configs._
 import com.typesafe.config.ConfigFactory
