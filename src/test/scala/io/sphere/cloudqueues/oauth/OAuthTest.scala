@@ -1,6 +1,6 @@
 package io.sphere.cloudqueues.oauth
 
-import java.util.{Calendar, Date}
+import java.util.{Base64, Calendar, Date}
 
 import io.sphere.cloudqueues.crypto.DefaultSigner
 import io.sphere.cloudqueues.oauth.OAuth._
@@ -47,10 +47,10 @@ class OAuthTest extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
       "the signature has been altered" in {
         import spray.json._
 
-        val token = validToken.token
+        val token = validToken.decoded
         val json = token.parseJson.asJsObject
         val newJson = json.copy(fields = json.fields + ("signature" → JsString("new_signature")))
-        val newToken = OAuthToken(newJson.compactPrint)
+        val newToken = OAuthToken.encode(newJson.compactPrint)
 
         val validation = oauth.validates(newToken)
         validation shouldBe a [SignatureCorrupted.type]

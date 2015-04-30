@@ -1,6 +1,7 @@
 package io.sphere.cloudqueues.oauth
 
-import java.util.{Calendar, Date}
+import java.nio.charset.StandardCharsets
+import java.util.{Base64, Calendar, Date}
 
 import io.sphere.cloudqueues.crypto.Signer
 
@@ -18,7 +19,20 @@ object OAuth {
    * An OAuth Token that can be send and received from the user
    * @param token contains the serialization of a serialized token and its signature
    */
-  case class OAuthToken(token: String)
+  case class OAuthToken(token: String) {
+    import OAuthToken._
+    def decoded: String =
+      new String(decoder.decode(token.getBytes(UTF_8)), UTF_8)
+  }
+  object OAuthToken {
+    def encode(s: String): OAuthToken = {
+      val encoded = new String(encoder.encode(s.getBytes(UTF_8)), UTF_8)
+      apply(encoded)
+    }
+    val UTF_8 = StandardCharsets.UTF_8
+    val encoder = Base64.getEncoder
+    val decoder = Base64.getDecoder
+  }
 
   sealed trait OAuthTokenParsing
   case class OAuthValid(token: AuthenticationToken) extends OAuthTokenParsing
@@ -76,7 +90,7 @@ class OAuth(secretKey: Array[Byte], signer: Signer) {
 
     val json = token.toJson
 
-    OAuthToken(json.compactPrint)
+    OAuthToken.encode(json.compactPrint)
   }
 
 
@@ -103,7 +117,7 @@ class OAuth(secretKey: Array[Byte], signer: Signer) {
       import JsonFormats._
       import spray.json._
 
-      val ast = token.token.parseJson
+      val ast = token.decoded.parseJson
       ast.convertTo[SignedSerializedToken]
     }
 
