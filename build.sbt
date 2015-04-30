@@ -12,7 +12,7 @@ val akkaHttpVersion = "1.0-RC1"
 
 libraryDependencies ++=
   "com.typesafe.akka" %% "akka-http-scala-experimental" % akkaHttpVersion ::
-  "com.typesafe.akka" %% "akka-slf4j" % "2.3.9" ::
+  "com.typesafe.akka" %% "akka-slf4j" % "2.3.10" ::
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpVersion ::
   "com.typesafe" % "config" % "1.2.1" ::
   "com.github.kxbmap" %% "configs" % "0.2.3" ::
