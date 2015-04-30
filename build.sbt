@@ -8,7 +8,7 @@ version := "1.0"
 
 scalaVersion := "2.11.6"
 
-val akkaHttpVersion = "1.0-RC1"
+val akkaHttpVersion = "1.0-RC2"
 
 libraryDependencies ++=
   "com.typesafe.akka" %% "akka-http-scala-experimental" % akkaHttpVersion ::
