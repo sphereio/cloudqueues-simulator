@@ -53,3 +53,4 @@ packageDescription := """It simulates cloud queues that is based on the openstac
  - http://www.rackspace.com/cloud/queues
  - https://github.com/openstack/zaqar"""
 serverLoading in Debian := ServerLoader.SystemV
+debianPackageDependencies in Debian += "java8-runtime"
