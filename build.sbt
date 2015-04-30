@@ -27,6 +27,14 @@ libraryDependencies ++=
   "org.mockito" % "mockito-core" % "1.10.19" ::
   Nil map (_ % Test)
 
+// Java 8
+javacOptions in ThisBuild ++= Seq("-source", "1.8", "-target", "1.8")
+initialize := {
+  val _ = initialize.value
+  if (sys.props("java.specification.version") != "1.8")
+    sys.error("Java 8 is required for this project.")
+}
+
 spray.revolver.RevolverPlugin.Revolver.settings
 
 enablePlugins(JavaServerAppPackaging)
