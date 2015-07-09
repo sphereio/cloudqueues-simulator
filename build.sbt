@@ -27,6 +27,18 @@ libraryDependencies ++=
   "org.mockito" % "mockito-core" % "1.10.19" ::
   Nil map (_ % Test)
 
+// compiler warnings
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-encoding", "UTF-8",
+  "-unchecked",
+  "-feature",
+  "-language:postfixOps",
+  "-Xlint",
+  "-Ywarn-unused-import")
+javacOptions ++= Seq("-deprecation", "-Xlint:unchecked")
+
+
 // Java 8
 javacOptions in ThisBuild ++= Seq("-source", "1.8", "-target", "1.8")
 initialize := {
