@@ -6,24 +6,24 @@ name := """cloud-queues-simulator"""
 
 version := "1.0"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
-val akkaHttpVersion = "1.0-RC2"
+val akkaHttpVersion = "1.0-RC3"
 
 libraryDependencies ++=
-  "com.typesafe.akka" %% "akka-http-scala-experimental" % akkaHttpVersion ::
-  "com.typesafe.akka" %% "akka-slf4j" % "2.3.10" ::
+  "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpVersion ::
+  "com.typesafe.akka" %% "akka-slf4j" % "2.3.12" ::
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpVersion ::
-  "com.typesafe" % "config" % "1.2.1" ::
-  "com.github.kxbmap" %% "configs" % "0.2.3" ::
+  "com.typesafe" % "config" % "1.3.0" ::
+  "com.github.kxbmap" %% "configs" % "0.2.4" ::
   "ch.qos.logback" % "logback-classic" % "1.1.3" ::
   Nil
 
 
 libraryDependencies ++=
-  "org.scalatest" %% "scalatest" % "2.2.4" ::
-  "org.scalacheck" %% "scalacheck" % "1.12.2" ::
-  "com.typesafe.akka" %% "akka-http-testkit-scala-experimental" % akkaHttpVersion ::
+  "org.scalatest" %% "scalatest" % "2.2.5" ::
+  "org.scalacheck" %% "scalacheck" % "1.12.4" ::
+  "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion ::
   "org.mockito" % "mockito-core" % "1.10.19" ::
   Nil map (_ % Test)
 
