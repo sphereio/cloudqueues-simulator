@@ -20,7 +20,11 @@ class PerfTests extends Simulation {
      .baseURL(s"http://localhost:30002")
      .acceptEncodingHeader("gzip, deflate")
 
-  val homeResource = scenario("homeResource").exec(HomeResource.homeResource)
+  val users = scenario("users")
+    .exec(
+      HomeResource.homeResource,
+      OAuthTokenResource.oauthToken,
+      QueueResource.createQueue("test"))
 
-  setUp(homeResource.inject(rampUsers(100).over(1 second))).protocols(httpConf)
+  setUp(users.inject(atOnceUsers(10))).protocols(httpConf)
 }
