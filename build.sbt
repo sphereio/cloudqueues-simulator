@@ -8,24 +8,37 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
+enablePlugins(GatlingPlugin)
+
+
 val akkaHttpVersion = "1.0-RC3"
 
 libraryDependencies ++=
-  "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpVersion ::
-  "com.typesafe.akka" %% "akka-slf4j" % "2.3.12" ::
+  "com.typesafe.akka" %% "akka-http-experimental"            % akkaHttpVersion ::
+  "com.typesafe.akka" %% "akka-slf4j"                        % "2.3.12"        ::
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpVersion ::
-  "com.typesafe" % "config" % "1.3.0" ::
-  "com.github.kxbmap" %% "configs" % "0.2.4" ::
-  "ch.qos.logback" % "logback-classic" % "1.1.3" ::
+  "com.typesafe"      %  "config"                            % "1.3.0"         ::
+  "com.github.kxbmap" %% "configs"                           % "0.2.4"         ::
+  "ch.qos.logback"    %  "logback-classic"                   % "1.1.3"         ::
   Nil
 
 
 libraryDependencies ++=
-  "org.scalatest" %% "scalatest" % "2.2.5" ::
-  "org.scalacheck" %% "scalacheck" % "1.12.4" ::
+  "org.scalatest"     %% "scalatest"                      % "2.2.5"         ::
+  "org.scalacheck"    %% "scalacheck"                     % "1.12.4"        ::
   "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion ::
-  "org.mockito" % "mockito-core" % "1.10.19" ::
+  "org.mockito"       %  "mockito-core"                   % "1.10.19"       ::
   Nil map (_ % Test)
+
+
+
+libraryDependencies ++= {
+  val gatlingVersion = "2.1.6"
+
+  "io.gatling.highcharts" % "gatling-charts-highcharts" % gatlingVersion ::
+  "io.gatling"            % "gatling-test-framework"    % gatlingVersion ::
+  Nil map (_ % "it")
+}
 
 // compiler warnings
 scalacOptions ++= Seq(

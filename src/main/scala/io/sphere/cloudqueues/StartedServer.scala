@@ -20,13 +20,15 @@ object StartedServer extends Logging {
       conn.flow.join(routes).run()
     }).run()
 
-    StartedServer(bindingFuture, system)
+    StartedServer(host, port, bindingFuture, system)
   }
 }
 
-case class StartedServer(bindingFuture: Future[Http.ServerBinding], system: ActorSystem) {
+case class StartedServer(host: String, port: Int, bindingFuture: Future[Http.ServerBinding], system: ActorSystem) extends Logging {
   import system.dispatcher
 
-  def stop(): Future[Unit] =
-    bindingFuture flatMap(_.unbind()) andThen { case _ ⇒ system.shutdown() }
+  def stop(): Future[Unit] = {
+    log.info(s"stopping HTTP server on $host:$port")
+    bindingFuture flatMap (_.unbind()) andThen { case _ ⇒ system.shutdown() }
+  }
 }
