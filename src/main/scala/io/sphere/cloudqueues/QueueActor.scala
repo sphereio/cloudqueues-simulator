@@ -53,20 +53,29 @@ object QueueActor {
 }
 
 class QueueActor(name: QueueName) extends Actor with ActorLogging {
+  import context._
 
   import collection.mutable.{ArrayBuffer, Stack}
 
   private var queuedMessages = new Stack[MessageInQueue]()
   private var claims = new ArrayBuffer[Claim]()
 
+  self ! "check"
+  import scala.concurrent.duration._
+
   def receive: Receive = {
+    case "check" ⇒
+      log.info(s"[$name] ${queuedMessages.size} message(s) in queue, ${claims.size} claimed message(s)")
+      system.scheduler.scheduleOnce(10.seconds) {
+        self ! "check"
+      }
     case op: QueueOperation[_] ⇒ handle(op)
   }
 
   private def handle(op: QueueOperation[_]) = op match {
 
     case PutNewMessage(messages) ⇒
-      log.info(s"putting ${messages.size} messages in '$name'")
+      log.info(s"[$name] putting ${messages.size} messages")
       val addedMessages = messages.map(MessageInQueue.apply)
       queuedMessages.pushAll(addedMessages)
       sender ! Some(MessagesAdded(addedMessages))
@@ -76,12 +85,12 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
       val nbr = Math.min(limit, queuedMessages.length)
       val messages = (1 to nbr).map(_ ⇒ queuedMessages.pop())
       if (messages.nonEmpty) {
-        val claim = Claim(ClaimId(UUID.randomUUID().toString), messages.toList)
+        val claim = Claim(ClaimId(UUID.randomUUID().toString), messages.toVector)
         claims.append(claim)
-        log.info(s"claimed ${messages.size} from '$name' with claim id '${claim.id}'")
+        log.info(s"[$name] claimed ${messages.size} with claim id '${claim.id}'")
         sender ! Some(ClaimCreated(claim))
       } else {
-        log.info(s"no messages to claim in '$name'")
+        log.debug(s"[$name] no messages to claim")
         sender ! Some(NoMessagesToClaim)
       }
 
@@ -89,7 +98,7 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
     case ReleaseClaim(claimId) ⇒
       val maybeClaim = claims.find(_.id == claimId)
       val result = maybeClaim map { claim ⇒
-        log.info(s"release ${claim.messages.size} messages from '$name' with claim id '${claim.id}'")
+        log.info(s"[$name] release ${claim.messages.size} messages with claim id '${claim.id}'")
         queuedMessages.pushAll(claim.messages)
         claims = claims.filterNot(_.id == claimId)
         ClaimReleased
@@ -98,6 +107,8 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
 
 
     case DeleteMessage(msgId, None) ⇒
+      if (!queuedMessages.exists(_.id == msgId))
+        log.error(s"[$name] cannot delete claimed message '$msgId'")
       queuedMessages = queuedMessages.filterNot(_.id == msgId)
       sender ! Some(MessageDeleted)
 
@@ -107,10 +118,13 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
         claim ← claims.find(_.id == claimId)
         msg ← claim.messages.find(_.id == msgId)
       } yield {
-          claim.copy(messages = claim.messages.filterNot(_.id == msgId))
-        }
+        val newClaim = claim.messages.filterNot(_.id == msgId)
+        if (newClaim.size == claim.messages.size)
+          log.error(s"[$name] cannot delete claimed message '$msgId'")
+        claim.copy(messages = claim.messages.filterNot(_.id == msgId))
+      }
       sender ! (newClaim map { c ⇒
-        log.info(s"remove message '$msgId' from claim '$claimId'")
+        log.info(s"[$name] remove message '$msgId' from claim '$claimId'")
         claims = claims.filterNot(_.id == claimId)
         claims.append(c)
         MessageDeleted

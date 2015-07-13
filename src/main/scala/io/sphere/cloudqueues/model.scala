@@ -39,5 +39,5 @@ object MessageInQueue {
   def apply(message: Message): MessageInQueue = MessageInQueue(MessageId(UUID.randomUUID().toString), message.ttl, message.body)
 }
 
-case class Claim(id: ClaimId, messages: List[MessageInQueue])
+case class Claim(id: ClaimId, messages: Vector[MessageInQueue])
 
