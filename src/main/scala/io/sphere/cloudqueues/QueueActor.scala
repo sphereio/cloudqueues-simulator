@@ -65,7 +65,10 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
 
   def receive: Receive = {
     case "check" ⇒
-      log.info(s"[$name] ${queuedMessages.size} message(s) in queue, ${claims.size} claimed message(s)")
+      val queueSize = queuedMessages.size
+      val claimSize = claims.map(_.messages.size).sum
+      val message = s"[$name] $queueSize message(s) in queue, $claimSize claimed message(s)"
+      if (queueSize == 0 && claimSize == 0) log.debug(message) else log.info(message)
       system.scheduler.scheduleOnce(10.seconds) {
         self ! "check"
       }
@@ -87,7 +90,7 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
       if (messages.nonEmpty) {
         val claim = Claim(ClaimId(UUID.randomUUID().toString), messages.toVector)
         claims.append(claim)
-        log.info(s"[$name] claimed ${messages.size} with claim id '${claim.id}'")
+        log.info(s"[$name] claimed ${messages.size} message with new claim id '${claim.id}'")
         sender ! Some(ClaimCreated(claim))
       } else {
         log.debug(s"[$name] no messages to claim")
