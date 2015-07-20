@@ -26,24 +26,26 @@ object QueueManager {
 
 class QueueManager extends Actor with ActorLogging {
 
-  private var queues = Map.empty[QueueName, ActorRef]
+  private val queues = collection.mutable.AnyRefMap[String, ActorRef]()
 
   def receive = {
-    case NewQueue(name) ⇒
-      if (queues.contains(name)) {
-        log.info(s"queue '$name' already exists")
+    case NewQueue(q) ⇒
+      if (queues.contains(q.name)) {
+        log.info(s"queue '$q' already exists")
         sender ! QueueAlreadyExists
       } else {
-        log.info(s"creates queue '$name'")
-        queues += name → context.actorOf(QueueActor.props(name), name.name)
+        log.info(s"creates queue '$q'")
+        queues += q.name → context.actorOf(QueueActor.props(q), q.name)
         sender ! QueueCreated
       }
 
     case AQueueOperation(queue, operation) ⇒
-      if (!queues.contains(queue)) {
-        log.debug(s"the queue '$queue' does not exist")
-        sender ! None
-      } else queues(queue).forward(operation)
+      queues.get(queue.name) match {
+        case None =>
+          log.debug(s"the queue '$queue' does not exist")
+          sender ! None
+        case Some(q) => q.forward(operation)
+      }
 
   }
 }
