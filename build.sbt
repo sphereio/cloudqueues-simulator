@@ -33,7 +33,7 @@ libraryDependencies ++=
 
 
 libraryDependencies ++= {
-  val gatlingVersion = "2.1.6"
+  val gatlingVersion = "2.1.7"
 
   "io.gatling.highcharts" % "gatling-charts-highcharts" % gatlingVersion ::
   "io.gatling"            % "gatling-test-framework"    % gatlingVersion ::
