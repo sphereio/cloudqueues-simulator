@@ -11,7 +11,7 @@ scalaVersion := "2.11.7"
 enablePlugins(GatlingPlugin)
 
 
-val akkaHttpVersion = "1.0-RC3"
+val akkaHttpVersion = "1.0"
 
 libraryDependencies ++=
   "com.typesafe.akka" %% "akka-http-experimental"            % akkaHttpVersion ::

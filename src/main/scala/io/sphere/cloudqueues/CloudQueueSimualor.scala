@@ -2,7 +2,7 @@ package io.sphere.cloudqueues
 
 import akka.actor.{Props, ActorSystem}
 import akka.http.scaladsl.server.Directives._
-import akka.stream.ActorFlowMaterializer
+import akka.stream.ActorMaterializer
 import com.github.kxbmap.configs._
 import com.typesafe.config.ConfigFactory
 import io.sphere.cloudqueues.crypto.DefaultSigner
@@ -14,7 +14,7 @@ object CloudQueueSimualor extends Logging {
     val conf = ConfigFactory.load()
     implicit val system = ActorSystem("cloudqueues", conf)
     import system.dispatcher
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer()
 
     val httpHost = host getOrElse "0.0.0.0"
     val httpPort = port getOrElse conf.get[Int]("http.port")

@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.headers.Location
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{RequestContext, Route}
-import akka.stream.ActorFlowMaterializer
+import akka.stream.ActorMaterializer
 import io.sphere.cloudqueues.QueueInterface._
 import io.sphere.cloudqueues.oauth.OAuth
 import io.sphere.cloudqueues.oauth.OAuth._
@@ -51,7 +51,7 @@ object Routes {
     implicit val format = jsonFormat2(ClaimRequestBody.apply)
   }
 
-  case class Queue(queueInterface: QueueInterface, oauth: OAuth)(implicit ec: ExecutionContext, materializer: ActorFlowMaterializer) {
+  case class Queue(queueInterface: QueueInterface, oauth: OAuth)(implicit ec: ExecutionContext, materializer: ActorMaterializer) {
 
     implicit val messageJson = jsonFormat2(Message.apply)
 

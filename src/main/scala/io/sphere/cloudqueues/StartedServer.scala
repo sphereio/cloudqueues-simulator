@@ -3,22 +3,18 @@ package io.sphere.cloudqueues
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server._
-import akka.stream.ActorFlowMaterializer
-import akka.stream.scaladsl.Sink
+import akka.stream.ActorMaterializer
 
 import scala.concurrent.Future
 
 object StartedServer extends Logging {
 
-  def apply(host: String, port: Int, routes: Route)(implicit system: ActorSystem, materializer: ActorFlowMaterializer): StartedServer = {
+  def apply(host: String, port: Int, routes: Route)(implicit system: ActorSystem, materializer: ActorMaterializer): StartedServer = {
     import system.dispatcher
 
     log.info(s"starting HTTP server on $host:$port")
 
-    val server = Http().bind(host, port)
-    val bindingFuture = server.to(Sink.foreach { conn ⇒
-      conn.flow.join(routes).run()
-    }).run()
+    val bindingFuture = Http().bindAndHandle(routes, host, port)
 
     StartedServer(host, port, bindingFuture, system)
   }
