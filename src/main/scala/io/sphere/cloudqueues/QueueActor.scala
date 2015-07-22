@@ -31,10 +31,10 @@ class QueueManager extends Actor with ActorLogging {
   def receive = {
     case NewQueue(q) ⇒
       if (queues.contains(q.name)) {
-        log.info(s"queue '$q' already exists")
+        log.info(s"[$q] queue already exists")
         sender ! QueueAlreadyExists
       } else {
-        log.info(s"creates queue '$q'")
+        log.info(s"[$q] create queue")
         queues += q.name → context.actorOf(QueueActor.props(q), q.name)
         sender ! QueueCreated
       }
@@ -42,7 +42,7 @@ class QueueManager extends Actor with ActorLogging {
     case AQueueOperation(queue, operation) ⇒
       queues.get(queue.name) match {
         case None =>
-          log.warning(s"the queue '$queue' does not exist. Cannot proceed operation: $operation")
+          log.warning(s"[$queue] the queue does not exist. Cannot proceed operation: $operation")
           sender ! None
         case Some(q) => q.forward(operation)
       }
@@ -92,7 +92,7 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
       if (messages.nonEmpty) {
         val claim = Claim(ClaimId(UUID.randomUUID().toString), messages.toVector)
         claims.append(claim)
-        log.info(s"[$name] claimed ${messages.size} message with new claim id '${claim.id}'")
+        log.info(s"[$name] [${claim.id}] claimed ${messages.size} message")
         sender ! Some(ClaimCreated(claim))
       } else {
         log.debug(s"[$name] no messages to claim")
@@ -103,7 +103,7 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
     case ReleaseClaim(claimId) ⇒
       val maybeClaim = claims.find(_.id == claimId)
       val result = maybeClaim map { claim ⇒
-        log.info(s"[$name] release ${claim.messages.size} messages with claim id '${claim.id}'")
+        log.info(s"[$name] [${claim.id}] release ${claim.messages.size} messages")
         queuedMessages.pushAll(claim.messages)
         claims = claims.filterNot(_.id == claimId)
         ClaimReleased
@@ -122,14 +122,15 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
       val newClaim = for {
         claim ← claims.find(_.id == claimId)
         msg ← claim.messages.find(_.id == msgId)
-      } yield {
-        val newClaim = claim.messages.filterNot(_.id == msgId)
-        if (newClaim.size == claim.messages.size)
-          log.error(s"[$name] cannot delete claimed message '$msgId'")
-        claim.copy(messages = claim.messages.filterNot(_.id == msgId))
-      }
+        newMessagesInClaim = claim.messages.filterNot(_.id == msgId)
+        newClaim <- if (newMessagesInClaim.size == claim.messages.size) {
+          log.error(s"[$name] [$claimId] cannot delete claimed message '$msgId'")
+          None
+        } else Some(claim.copy(messages = newMessagesInClaim))
+      } yield newClaim
+
       sender ! (newClaim map { c ⇒
-        log.info(s"[$name] remove message '$msgId' from claim '$claimId'. New claim size: ${c.messages.size}")
+        log.info(s"[$name] [$claimId] remove message '$msgId'. New claim size: ${c.messages.size}")
         claims = claims.filterNot(_.id == claimId)
         claims.append(c)
         MessageDeleted

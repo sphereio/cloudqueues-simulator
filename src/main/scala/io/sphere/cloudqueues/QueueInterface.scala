@@ -54,7 +54,7 @@ class QueueInterface(queueManager: ActorRef) extends Logging {
   private def ask[R](queue: QueueName, op: QueueOperation[R])(implicit tag: ClassTag[R]): Future[R] =
     try queueManager ? AQueueOperation[R](queue, op)
     catch {
-      case timeout: AskTimeoutException => 
+      case timeout: AskTimeoutException =>
         throw new Exception(s"[$queue] timeout when asking to proceed operation: $op", timeout)
     }
 
