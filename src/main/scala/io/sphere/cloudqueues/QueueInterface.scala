@@ -1,6 +1,7 @@
 package io.sphere.cloudqueues
 
 import akka.actor.ActorRef
+import akka.pattern.AskTimeoutException
 import akka.util.Timeout
 import io.sphere.cloudqueues.QueueManager._
 import io.sphere.cloudqueues.reply._
@@ -29,7 +30,7 @@ object QueueInterface {
 
 }
 
-class QueueInterface(queueManager: ActorRef) {
+class QueueInterface(queueManager: ActorRef) extends Logging {
 
   import io.sphere.cloudqueues.QueueInterface._
 
@@ -51,6 +52,10 @@ class QueueInterface(queueManager: ActorRef) {
     ask(queue, DeleteMessage(messageId, claimId))
 
   private def ask[R](queue: QueueName, op: QueueOperation[R])(implicit tag: ClassTag[R]): Future[R] =
-    queueManager ? AQueueOperation[R](queue, op)
+    try queueManager ? AQueueOperation[R](queue, op)
+    catch {
+      case timeout: AskTimeoutException => 
+        throw new Exception(s"[$queue] timeout when asking to proceed operation: $op", timeout)
+    }
 
 }

@@ -42,7 +42,7 @@ class QueueManager extends Actor with ActorLogging {
     case AQueueOperation(queue, operation) ⇒
       queues.get(queue.name) match {
         case None =>
-          log.debug(s"the queue '$queue' does not exist")
+          log.warning(s"the queue '$queue' does not exist. Cannot proceed operation: $operation")
           sender ! None
         case Some(q) => q.forward(operation)
       }
