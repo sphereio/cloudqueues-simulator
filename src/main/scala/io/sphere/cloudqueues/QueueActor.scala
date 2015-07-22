@@ -132,7 +132,7 @@ class QueueActor(name: QueueName) extends Actor with ActorLogging {
       sender ! (newClaim map { c ⇒
         log.info(s"[$name] [$claimId] remove message '$msgId'. New claim size: ${c.messages.size}")
         claims = claims.filterNot(_.id == claimId)
-        claims.append(c)
+        if (c.messages.nonEmpty) claims.append(c)
         MessageDeleted
       })
   }
