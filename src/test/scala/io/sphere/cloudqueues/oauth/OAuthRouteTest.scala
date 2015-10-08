@@ -15,7 +15,7 @@ class OAuthRouteTest extends FreeSpec with Matchers with MockitoSugar with Scala
   def withActorSystem(testCode: ActorSystem ⇒ Any) = {
     val system = ActorSystem(this.getClass.getSimpleName)
     try testCode(system)
-    finally system.shutdown()
+    finally system.terminate()
   }
 
   class QueueSetup(system: ActorSystem) {

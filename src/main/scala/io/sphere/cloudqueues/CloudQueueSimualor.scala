@@ -3,7 +3,7 @@ package io.sphere.cloudqueues
 import akka.actor.{Props, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import com.github.kxbmap.configs._
+import com.github.kxbmap.configs.syntax._
 import com.typesafe.config.ConfigFactory
 import io.sphere.cloudqueues.crypto.DefaultSigner
 import io.sphere.cloudqueues.oauth.OAuth

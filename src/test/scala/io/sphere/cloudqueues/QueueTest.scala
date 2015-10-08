@@ -22,7 +22,7 @@ class QueueTest extends FreeSpec with Matchers with MockitoSugar with OptionValu
   def withActorSystem(testCode: ActorSystem ⇒ Any) = {
     val system = ActorSystem(this.getClass.getSimpleName)
     try testCode(system)
-    finally system.shutdown()
+    finally system.terminate()
   }
 
   class QueueSetup(system: ActorSystem) {

@@ -15,17 +15,17 @@ val akkaHttpVersion = "1.0"
 
 libraryDependencies ++=
   "com.typesafe.akka" %% "akka-http-experimental"            % akkaHttpVersion ::
-  "com.typesafe.akka" %% "akka-slf4j"                        % "2.3.12"        ::
+  "com.typesafe.akka" %% "akka-slf4j"                        % "2.4.0"         ::
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpVersion ::
   "com.typesafe"      %  "config"                            % "1.3.0"         ::
-  "com.github.kxbmap" %% "configs"                           % "0.2.4"         ::
+  "com.github.kxbmap" %% "configs"                           % "0.3.0"         ::
   "ch.qos.logback"    %  "logback-classic"                   % "1.1.3"         ::
   Nil
 
 
 libraryDependencies ++=
   "org.scalatest"     %% "scalatest"                      % "2.2.5"         ::
-  "org.scalacheck"    %% "scalacheck"                     % "1.12.4"        ::
+  "org.scalacheck"    %% "scalacheck"                     % "1.12.5"        ::
   "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion ::
   "org.mockito"       %  "mockito-core"                   % "1.10.19"       ::
   Nil map (_ % Test)

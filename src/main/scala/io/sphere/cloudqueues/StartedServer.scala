@@ -25,6 +25,6 @@ case class StartedServer(host: String, port: Int, bindingFuture: Future[Http.Ser
 
   def stop(): Future[Unit] = {
     log.info(s"stopping HTTP server on $host:$port")
-    bindingFuture flatMap (_.unbind()) andThen { case _ ⇒ system.shutdown() }
+    bindingFuture flatMap (_.unbind()) fallbackTo (system.terminate() map (_ ⇒ ()))
   }
 }
