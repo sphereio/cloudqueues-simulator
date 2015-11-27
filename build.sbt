@@ -1,6 +1,7 @@
 import java.util.Date
 
 import com.typesafe.sbt.packager.archetypes.ServerLoader
+import com.typesafe.sbt.packager.docker._
 
 name := """cloud-queues-simulator"""
 
@@ -65,6 +66,11 @@ spray.revolver.RevolverPlugin.Revolver.settings
 enablePlugins(JavaServerAppPackaging)
 
 enablePlugins(DockerPlugin)
+// use a more minimal image https://hub.docker.com/r/develar/java/
+dockerBaseImage := "develar/java"
+// do not use bash but ash for busybox docker builds
+enablePlugins(AshScriptPlugin)
+
 dockerExposedPorts := 30001 :: Nil
 packageName in Docker := "sphereio/cloud-queues-simulator"
 dockerUpdateLatest := true
