@@ -11,7 +11,7 @@ class OAuthTest extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
 
   private val validSigner = DefaultSigner
 
-  private def dateInMoreThan24Hours: Date = {
+  private val dateInMoreThan24Hours: Date = {
     val calendar = Calendar.getInstance()
     calendar.add(Calendar.HOUR_OF_DAY, 24)
     calendar.add(Calendar.MINUTE, 1)
@@ -36,10 +36,11 @@ class OAuthTest extends FreeSpec with Matchers with GeneratorDrivenPropertyCheck
     "is invalid when" - {
 
       "the validity period is outdated" in {
-        forAll { (d: Date) ⇒
-          whenever(d.after(dateInMoreThan24Hours)) {
+        forAll { (l: Int) ⇒
+          whenever(l > 0) {
+            val d = new Date(dateInMoreThan24Hours.getTime + l)
             val validation = oauth.validates(validToken, now = d)
-            validation shouldBe a [PeriodInvalid.type]
+            validation shouldBe a[PeriodInvalid.type]
           }
         }
       }
