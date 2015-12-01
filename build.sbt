@@ -68,8 +68,11 @@ enablePlugins(JavaServerAppPackaging)
 enablePlugins(DockerPlugin)
 // use a more minimal image https://hub.docker.com/r/develar/java/
 dockerBaseImage := "develar/java"
-// do not use bash but ash for busybox docker builds
-enablePlugins(AshScriptPlugin)
+dockerCommands := Seq(
+  dockerCommands.value.head,
+  // Install bash to be able to start the application
+  Cmd("RUN apk add --update bash && rm -rf /var/cache/apk/*")
+) ++ dockerCommands.value.tail
 
 dockerExposedPorts := 30001 :: Nil
 packageName in Docker := "sphereio/cloud-queues-simulator"
