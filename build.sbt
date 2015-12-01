@@ -12,11 +12,11 @@ scalaVersion := "2.11.7"
 enablePlugins(GatlingPlugin)
 
 
-val akkaHttpVersion = "2.0-M1"
+val akkaHttpVersion = "2.0-M2"
 
 libraryDependencies ++=
   "com.typesafe.akka" %% "akka-http-experimental"            % akkaHttpVersion ::
-  "com.typesafe.akka" %% "akka-slf4j"                        % "2.4.0"         ::
+  "com.typesafe.akka" %% "akka-slf4j"                        % "2.4.1"         ::
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaHttpVersion ::
   "com.typesafe"      %  "config"                            % "1.3.0"         ::
   "com.github.kxbmap" %% "configs"                           % "0.3.0"         ::
