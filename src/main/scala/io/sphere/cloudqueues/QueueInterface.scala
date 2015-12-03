@@ -34,7 +34,7 @@ class QueueInterface(queueManager: ActorRef) extends Logging {
 
   import io.sphere.cloudqueues.QueueInterface._
 
-  implicit val timeout: Timeout = 50.milliseconds
+  implicit val timeout: Timeout = 500.milliseconds
 
   def newQueue(name: QueueName): Future[QueueCreationResponse] =
     queueManager ? NewQueue(name)
