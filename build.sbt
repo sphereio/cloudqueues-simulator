@@ -61,8 +61,6 @@ initialize := {
     sys.error("Java 8 is required for this project.")
 }
 
-spray.revolver.RevolverPlugin.Revolver.settings
-
 enablePlugins(JavaServerAppPackaging)
 
 enablePlugins(DockerPlugin)
