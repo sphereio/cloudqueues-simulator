@@ -25,7 +25,7 @@ libraryDependencies ++=
 
 
 libraryDependencies ++=
-  "org.scalatest"     %% "scalatest"                      % "2.2.5"         ::
+  "org.scalatest"     %% "scalatest"                      % "2.2.6"         ::
   "org.scalacheck"    %% "scalacheck"                     % "1.12.5"        ::
   "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpVersion ::
   "org.mockito"       %  "mockito-core"                   % "1.10.19"       ::
