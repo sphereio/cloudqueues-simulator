@@ -5,16 +5,14 @@ import java.util.UUID
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model.StatusCodes._
-import akka.http.scaladsl.model.headers.CustomHeader
-import akka.http.scaladsl.model.{HttpEntity, HttpHeader, HttpRequest}
+import akka.http.scaladsl.model.{HttpEntity, HttpRequest}
 import akka.http.scaladsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import io.sphere.cloudqueues.crypto.DefaultSigner
 import io.sphere.cloudqueues.oauth.OAuth
-import io.sphere.cloudqueues.oauth.OAuth.OAuthToken
 import io.sphere.cloudqueues.util.FutureAwaits._
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{OptionValues, FreeSpec, Matchers}
+import org.scalatest.{FreeSpec, Matchers, OptionValues}
 import spray.json._
 
 class QueueTest extends FreeSpec with Matchers with MockitoSugar with OptionValues with ScalatestRouteTest {
@@ -32,15 +30,9 @@ class QueueTest extends FreeSpec with Matchers with MockitoSugar with OptionValu
     val queueRoutes = Routes.Queue(queueInterface, oauth)
     val route = queueRoutes.route
 
-    def `X-Auth-Token`(token: OAuthToken): HttpHeader = `X-Auth-Token`(token.token)
-    def `X-Auth-Token`(token: String): HttpHeader = new CustomHeader {
-      override def name(): String = "X-Auth-Token"
-      override def value(): String = token
-    }
-
     lazy val token = oauth.createOAuthToken()
     val authenticated: HttpRequest ⇒ HttpRequest = req ⇒{
-      req.withHeaders(`X-Auth-Token`(token))
+      req.addHeader(`X-Auth-Token`(token.token))
     }
 
     def withQueue[A](block: QueueName ⇒ A) = {

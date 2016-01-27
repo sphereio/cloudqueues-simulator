@@ -129,8 +129,8 @@ object Routes {
       }
 
     val authenticated: RequestContext ⇒ Boolean = req ⇒ {
-      req.request.getHeader("X-Auth-Token").fold(false) { token ⇒
-        oauth.validates(OAuthToken(token.value())) match {
+      req.request.header[`X-Auth-Token`].fold(false) { token ⇒
+        oauth.validates(OAuthToken(token.value)) match {
           case OAuthValid(_) ⇒ true
           case _ ⇒ false
         }
